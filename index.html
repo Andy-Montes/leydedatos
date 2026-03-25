@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Control de Combustible - Citroën C3</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #0f766e;
+      --primary-soft: #dff5f3;
+      --danger: #b91c1c;
+      --danger-soft: #fee2e2;
+      --border: #e5e7eb;
+      --shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 24px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 14px;
+    }
+
+    .title {
+      margin: 8px 0 16px;
+      font-size: 1.4rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      line-height: 1.15;
+      word-break: break-word;
+    }
+
+    .buttons {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    button,
+    .btn {
+      border: none;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: #eef2ff;
+      color: #312e81;
+    }
+
+    .btn-ghost {
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    .btn-danger {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .hidden { display: none !important; }
+
+    .section-title {
+      margin: 0 0 10px;
+      font-size: 1rem;
+    }
+
+    .field {
+      margin-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      font-size: 1rem;
+      padding: 12px;
+      color: var(--text);
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+
+    textarea {
+      min-height: 84px;
+      resize: vertical;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .msg {
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 0.95rem;
+      margin-top: 10px;
+      border: 1px solid transparent;
+    }
+
+    .msg-error {
+      background: #fff1f2;
+      color: #9f1239;
+      border-color: #fecdd3;
+    }
+
+    .msg-info {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+    }
+
+    .history-item {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+
+    .history-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .history-date {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .chip {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: #f3f4f6;
+      color: #374151;
+      font-weight: 600;
+    }
+
+    .history-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px 10px;
+      font-size: 0.9rem;
+    }
+
+    .k {
+      color: var(--muted);
+      font-size: 0.78rem;
+      display: block;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 24px 10px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 12px;
+    }
+
+    .small {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    @media (min-width: 600px) {
+      .buttons {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1 class="title">⛽ Control de combustible • Citroën C3 AT</h1>
+
+    <section id="dashboardView">
+      <div class="card">
+        <div class="grid">
+          <div>
+            <div class="metric-label">Promedio general</div>
+            <div class="metric-value" id="avgGeneral">-- km/L</div>
+          </div>
+          <div>
+            <div class="metric-label">Última carga</div>
+            <div class="metric-value" id="lastPerformance">-- km/L</div>
+          </div>
+          <div>
+            <div class="metric-label">Gasto total del mes</div>
+            <div class="metric-value" id="monthExpense">$0</div>
+          </div>
+          <div>
+            <div class="metric-label">Total de cargas</div>
+            <div class="metric-value" id="totalLoads">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button class="btn-primary" id="btnGoAdd">Agregar carga</button>
+        <button class="btn-secondary" id="btnGoHistory">Ver historial</button>
+      </div>
+
+      <div class="card" style="margin-top: 12px;">
+        <h2 class="section-title">Resumen extra</h2>
+        <div class="grid">
+          <div>
+            <div class="metric-label">Mejor rendimiento</div>
+            <div class="metric-value" id="bestPerf">-- km/L</div>
+          </div>
+          <div>
+            <div class="metric-label">Peor rendimiento</div>
+            <div class="metric-value" id="worstPerf">-- km/L</div>
+          </div>
+          <div>
+            <div class="metric-label">Promedio Ciudad</div>
+            <div class="metric-value" id="avgCiudad">-- km/L</div>
+          </div>
+          <div>
+            <div class="metric-label">Promedio Mixto</div>
+            <div class="metric-value" id="avgMixto">-- km/L</div>
+          </div>
+          <div>
+            <div class="metric-label">Promedio Carretera</div>
+            <div class="metric-value" id="avgCarretera">-- km/L</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Alertas inteligentes</h2>
+        <div id="alertsContainer" class="small">Aún no hay alertas.</div>
+      </div>
+
+      <button class="btn-danger" id="btnWipe">Borrar todos los datos</button>
+    </section>
+
+    <section id="formView" class="hidden">
+      <div class="card">
+        <h2 class="section-title" id="formTitle">Agregar carga</h2>
+        <form id="loadForm" novalidate>
+          <div class="field">
+            <label for="fecha">Fecha</label>
+            <input type="date" id="fecha" required />
+          </div>
+          <div class="field">
+            <label for="kilometraje">Kilometraje actual (km)</label>
+            <input type="number" id="kilometraje" min="0" step="1" placeholder="Ej: 45230" required />
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="litros">Litros cargados</label>
+              <input type="number" id="litros" min="0" step="0.01" placeholder="Ej: 32.4" required />
+            </div>
+            <div class="field">
+              <label for="monto">Monto pagado</label>
+              <input type="number" id="monto" min="0" step="1" placeholder="Ej: 58000" required />
+            </div>
+          </div>
+          <div class="field">
+            <label for="tipoUso">Tipo de uso</label>
+            <select id="tipoUso">
+              <option value="Ciudad">Ciudad</option>
+              <option value="Mixto">Mixto</option>
+              <option value="Carretera">Carretera</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="observaciones">Observaciones (opcional)</label>
+            <textarea id="observaciones" maxlength="140" placeholder="Ej: Mucho tráfico, aire acondicionado todo el trayecto"></textarea>
+          </div>
+
+          <button type="submit" class="btn-primary" id="btnSave">Guardar carga</button>
+          <button type="button" class="btn-ghost" id="btnCancel" style="margin-top: 8px;">Volver</button>
+        </form>
+        <div id="formMessage"></div>
+      </div>
+    </section>
+
+    <section id="historyView" class="hidden">
+      <div class="card">
+        <h2 class="section-title">Historial de cargas</h2>
+        <div id="historyList"></div>
+        <button class="btn-ghost" id="btnBackDash">Volver al dashboard</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'c3_fuel_records_v1';
+
+    const state = {
+      records: [],
+      editingId: null,
+    };
+
+    const el = {
+      dashboardView: document.getElementById('dashboardView'),
+      formView: document.getElementById('formView'),
+      historyView: document.getElementById('historyView'),
+      btnGoAdd: document.getElementById('btnGoAdd'),
+      btnGoHistory: document.getElementById('btnGoHistory'),
+      btnBackDash: document.getElementById('btnBackDash'),
+      btnCancel: document.getElementById('btnCancel'),
+      btnWipe: document.getElementById('btnWipe'),
+      loadForm: document.getElementById('loadForm'),
+      formTitle: document.getElementById('formTitle'),
+      formMessage: document.getElementById('formMessage'),
+      historyList: document.getElementById('historyList'),
+      avgGeneral: document.getElementById('avgGeneral'),
+      lastPerformance: document.getElementById('lastPerformance'),
+      monthExpense: document.getElementById('monthExpense'),
+      totalLoads: document.getElementById('totalLoads'),
+      bestPerf: document.getElementById('bestPerf'),
+      worstPerf: document.getElementById('worstPerf'),
+      avgCiudad: document.getElementById('avgCiudad'),
+      avgMixto: document.getElementById('avgMixto'),
+      avgCarretera: document.getElementById('avgCarretera'),
+      alertsContainer: document.getElementById('alertsContainer'),
+      fecha: document.getElementById('fecha'),
+      kilometraje: document.getElementById('kilometraje'),
+      litros: document.getElementById('litros'),
+      monto: document.getElementById('monto'),
+      tipoUso: document.getElementById('tipoUso'),
+      observaciones: document.getElementById('observaciones'),
+    };
+
+    function showView(name) {
+      el.dashboardView.classList.add('hidden');
+      el.formView.classList.add('hidden');
+      el.historyView.classList.add('hidden');
+      if (name === 'dashboard') el.dashboardView.classList.remove('hidden');
+      if (name === 'form') el.formView.classList.remove('hidden');
+      if (name === 'history') el.historyView.classList.remove('hidden');
+    }
+
+    function formatNumber(value, decimals = 2) {
+      if (value === null || value === undefined || Number.isNaN(value)) return '--';
+      return Number(value).toLocaleString('es-ES', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    }
+
+    function formatCurrency(value) {
+      return Number(value || 0).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+    }
+
+    function todayISO() {
+      const d = new Date();
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function parseDateSafe(value) {
+      return new Date(value + 'T00:00:00');
+    }
+
+    function sortRecordsAscending(records) {
+      return [...records].sort((a, b) => {
+        const dateDiff = parseDateSafe(a.fecha) - parseDateSafe(b.fecha);
+        if (dateDiff !== 0) return dateDiff;
+        return Number(a.kilometraje) - Number(b.kilometraje);
+      });
+    }
+
+    function recalculateRecords(records) {
+      const sorted = sortRecordsAscending(records).map(r => ({ ...r }));
+      for (let i = 0; i < sorted.length; i++) {
+        const current = sorted[i];
+        const previous = sorted[i - 1];
+        if (!previous) {
+          current.kmRecorridos = null;
+          current.rendimiento = null;
+          current.costoPorKm = null;
+          continue;
+        }
+
+        const kmRecorridos = Number(current.kilometraje) - Number(previous.kilometraje);
+        if (kmRecorridos > 0 && Number(current.litros) > 0) {
+          current.kmRecorridos = kmRecorridos;
+          current.rendimiento = kmRecorridos / Number(current.litros);
+          current.costoPorKm = Number(current.monto) / kmRecorridos;
+        } else {
+          current.kmRecorridos = null;
+          current.rendimiento = null;
+          current.costoPorKm = null;
+        }
+      }
+      return sorted;
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.records));
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        state.records = recalculateRecords(parsed);
+      } catch {
+        state.records = [];
+      }
+    }
+
+    function findPreviousRecordForValidation(date, odometer, excludeId = null) {
+      const currentDate = parseDateSafe(date);
+      const candidates = state.records
+        .filter(r => r.id !== excludeId)
+        .filter(r => {
+          const d = parseDateSafe(r.fecha);
+          return d < currentDate || (d.getTime() === currentDate.getTime() && Number(r.kilometraje) <= Number(odometer));
+        })
+        .sort((a, b) => {
+          const dateDiff = parseDateSafe(b.fecha) - parseDateSafe(a.fecha);
+          if (dateDiff !== 0) return dateDiff;
+          return Number(b.kilometraje) - Number(a.kilometraje);
+        });
+
+      return candidates[0] || null;
+    }
+
+    function showFormMessage(text, type = 'error') {
+      el.formMessage.innerHTML = '';
+      if (!text) return;
+      const div = document.createElement('div');
+      div.className = `msg ${type === 'error' ? 'msg-error' : 'msg-info'}`;
+      div.textContent = text;
+      el.formMessage.appendChild(div);
+    }
+
+    function resetForm() {
+      el.loadForm.reset();
+      el.fecha.value = todayISO();
+      el.tipoUso.value = 'Ciudad';
+      el.formTitle.textContent = 'Agregar carga';
+      state.editingId = null;
+      showFormMessage('');
+    }
+
+    function openAddForm() {
+      resetForm();
+      showView('form');
+    }
+
+    function openEditForm(id) {
+      const record = state.records.find(r => r.id === id);
+      if (!record) return;
+      state.editingId = id;
+      el.formTitle.textContent = 'Editar carga';
+      el.fecha.value = record.fecha;
+      el.kilometraje.value = record.kilometraje;
+      el.litros.value = record.litros;
+      el.monto.value = record.monto;
+      el.tipoUso.value = record.tipoUso;
+      el.observaciones.value = record.observaciones || '';
+      showFormMessage('');
+      showView('form');
+    }
+
+    function renderAlerts() {
+      const alerts = [];
+      const valid = state.records.filter(r => r.rendimiento !== null);
+
+      if (valid.length >= 2) {
+        const last = valid[valid.length - 1];
+        const prev = valid[valid.length - 2];
+        if (last.rendimiento < prev.rendimiento) {
+          alerts.push('Tu rendimiento bajó respecto a la carga anterior.');
+        }
+      }
+
+      if (valid.length > 0) {
+        const last = valid[valid.length - 1];
+        const best = valid.reduce((acc, cur) => cur.rendimiento > acc.rendimiento ? cur : acc, valid[0]);
+        if (last.id === best.id) {
+          alerts.push('Esta fue tu mejor carga hasta ahora.');
+        }
+      }
+
+      const avgCity = averageByUse('Ciudad');
+      const avgMix = averageByUse('Mixto');
+      if (avgCity !== null && avgMix !== null && avgCity < avgMix) {
+        alerts.push('Tu promedio en ciudad es más bajo que tu promedio mixto.');
+      }
+
+      if (alerts.length === 0) {
+        el.alertsContainer.className = 'small';
+        el.alertsContainer.textContent = 'Sin alertas por ahora. Registrá más cargas para obtener recomendaciones.';
+        return;
+      }
+
+      const list = alerts.map(msg => `<div class="msg msg-info" style="margin-top:8px;">${msg}</div>`).join('');
+      el.alertsContainer.className = '';
+      el.alertsContainer.innerHTML = list;
+    }
+
+    function average(values) {
+      if (!values.length) return null;
+      return values.reduce((sum, n) => sum + n, 0) / values.length;
+    }
+
+    function averageByUse(useType) {
+      const vals = state.records
+        .filter(r => r.tipoUso === useType && r.rendimiento !== null)
+        .map(r => Number(r.rendimiento));
+      return average(vals);
+    }
+
+    function renderDashboard() {
+      const valid = state.records.filter(r => r.rendimiento !== null);
+      const avgGeneral = average(valid.map(r => Number(r.rendimiento)));
+      const lastValid = valid[valid.length - 1] || null;
+
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = now.getMonth();
+      const monthTotal = state.records
+        .filter(r => {
+          const d = parseDateSafe(r.fecha);
+          return d.getFullYear() === y && d.getMonth() === m;
+        })
+        .reduce((sum, r) => sum + Number(r.monto), 0);
+
+      const best = valid.length ? Math.max(...valid.map(r => Number(r.rendimiento))) : null;
+      const worst = valid.length ? Math.min(...valid.map(r => Number(r.rendimiento))) : null;
+
+      el.avgGeneral.textContent = avgGeneral === null ? '-- km/L' : `${formatNumber(avgGeneral)} km/L`;
+      el.lastPerformance.textContent = lastValid ? `${formatNumber(lastValid.rendimiento)} km/L` : '-- km/L';
+      el.monthExpense.textContent = formatCurrency(monthTotal);
+      el.totalLoads.textContent = String(state.records.length);
+
+      el.bestPerf.textContent = best === null ? '-- km/L' : `${formatNumber(best)} km/L`;
+      el.worstPerf.textContent = worst === null ? '-- km/L' : `${formatNumber(worst)} km/L`;
+      el.avgCiudad.textContent = averageByUse('Ciudad') === null ? '-- km/L' : `${formatNumber(averageByUse('Ciudad'))} km/L`;
+      el.avgMixto.textContent = averageByUse('Mixto') === null ? '-- km/L' : `${formatNumber(averageByUse('Mixto'))} km/L`;
+      el.avgCarretera.textContent = averageByUse('Carretera') === null ? '-- km/L' : `${formatNumber(averageByUse('Carretera'))} km/L`;
+
+      renderAlerts();
+    }
+
+    function renderHistory() {
+      const list = [...state.records].sort((a, b) => parseDateSafe(b.fecha) - parseDateSafe(a.fecha) || Number(b.kilometraje) - Number(a.kilometraje));
+      if (!list.length) {
+        el.historyList.innerHTML = '<div class="empty">No hay cargas registradas todavía.</div>';
+        return;
+      }
+
+      el.historyList.innerHTML = list.map(r => {
+        const kmText = r.kmRecorridos === null ? '—' : `${formatNumber(r.kmRecorridos, 0)} km`;
+        const rendText = r.rendimiento === null ? '—' : `${formatNumber(r.rendimiento)} km/L`;
+        const cpkText = r.costoPorKm === null ? '—' : `${formatCurrency(r.costoPorKm)}/km`;
+
+        return `
+          <article class="history-item">
+            <div class="history-head">
+              <div>
+                <div class="history-date">${r.fecha.split('-').reverse().join('/')}</div>
+                <span class="chip">${r.tipoUso}</span>
+              </div>
+              <div style="font-weight:700;">${formatCurrency(r.monto)}</div>
+            </div>
+
+            <div class="history-grid">
+              <div><span class="k">Kilometraje</span>${formatNumber(r.kilometraje, 0)} km</div>
+              <div><span class="k">Litros</span>${formatNumber(r.litros)} L</div>
+              <div><span class="k">Km recorridos</span>${kmText}</div>
+              <div><span class="k">Rendimiento</span>${rendText}</div>
+              <div><span class="k">Costo por km</span>${cpkText}</div>
+              <div><span class="k">Obs.</span>${r.observaciones ? r.observaciones.replace(/</g, '&lt;') : '—'}</div>
+            </div>
+
+            <div class="actions">
+              <button class="btn-secondary" onclick="handleEdit('${r.id}')">Editar</button>
+              <button class="btn-danger" onclick="handleDelete('${r.id}')">Eliminar</button>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function refreshAll() {
+      renderDashboard();
+      renderHistory();
+    }
+
+    function validateInput({ fecha, kilometraje, litros, monto }, editingId) {
+      if (!kilometraje || !litros || !monto) {
+        return 'Completá kilometraje, litros y monto para guardar.';
+      }
+      if (Number(litros) <= 0 || Number(monto) <= 0) {
+        return 'Litros y monto deben ser mayores que 0.';
+      }
+
+      const prev = findPreviousRecordForValidation(fecha, kilometraje, editingId);
+      if (prev && Number(kilometraje) < Number(prev.kilometraje)) {
+        return `El kilometraje (${kilometraje}) no puede ser menor al registro anterior (${prev.kilometraje}).`;
+      }
+
+      return null;
+    }
+
+    function upsertRecord(data) {
+      if (state.editingId) {
+        state.records = state.records.map(r => r.id === state.editingId ? { ...r, ...data, id: r.id } : r);
+      } else {
+        state.records.push({ ...data, id: String(Date.now()) + Math.random().toString(16).slice(2) });
+      }
+      state.records = recalculateRecords(state.records);
+      saveState();
+      refreshAll();
+    }
+
+    window.handleEdit = function(id) {
+      openEditForm(id);
+    };
+
+    window.handleDelete = function(id) {
+      const ok = confirm('¿Eliminar esta carga? Esta acción recalculará las siguientes.');
+      if (!ok) return;
+      state.records = state.records.filter(r => r.id !== id);
+      state.records = recalculateRecords(state.records);
+      saveState();
+      refreshAll();
+    };
+
+    el.btnGoAdd.addEventListener('click', openAddForm);
+    el.btnGoHistory.addEventListener('click', () => {
+      renderHistory();
+      showView('history');
+    });
+    el.btnBackDash.addEventListener('click', () => showView('dashboard'));
+    el.btnCancel.addEventListener('click', () => showView('dashboard'));
+
+    el.btnWipe.addEventListener('click', () => {
+      const ok = confirm('¿Seguro que querés borrar todos los datos? Esta acción no se puede deshacer.');
+      if (!ok) return;
+      state.records = [];
+      saveState();
+      refreshAll();
+      showView('dashboard');
+    });
+
+    el.loadForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const payload = {
+        fecha: el.fecha.value,
+        kilometraje: parseInt(el.kilometraje.value, 10),
+        litros: parseFloat(el.litros.value),
+        monto: parseInt(el.monto.value, 10),
+        tipoUso: el.tipoUso.value,
+        observaciones: (el.observaciones.value || '').trim(),
+      };
+
+      const error = validateInput(payload, state.editingId);
+      if (error) {
+        showFormMessage(error, 'error');
+        return;
+      }
+
+      upsertRecord(payload);
+      resetForm();
+      showView('dashboard');
+    });
+
+    function init() {
+      loadState();
+      resetForm();
+      refreshAll();
+      showView('dashboard');
+    }
+
+    init();
+  </script>
+</body>
+</html>
