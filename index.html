@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Control de Combustible • Citroën C3</title>
+  <title>Consumo de Bencina • Citroën C3</title>
   <style>
     :root {
       --bg: #f6f8fb;
@@ -199,7 +199,7 @@
 </head>
 <body>
   <main class="app">
-    <h1 class="title">⛽ Control de combustible • Citroën C3 AT</h1>
+    <h1 class="title">⛽ Consumo de Bencina • Citroën C3 AT</h1>
 
     <section class="card">
       <div class="grid">
@@ -245,6 +245,14 @@
           </select>
         </div>
         <div class="field">
+          <label for="bencinera">Bencinera</label>
+          <select id="bencinera">
+            <option value="Aramco">Aramco</option>
+            <option value="Shell">Shell</option>
+            <option value="Copec">Copec</option>
+          </select>
+        </div>
+        <div class="field">
           <label for="observaciones">Observaciones (opcional)</label>
           <textarea id="observaciones" maxlength="140"></textarea>
         </div>
@@ -262,6 +270,9 @@
         <div><div class="metric-label">Promedio ciudad</div><div class="metric-value" id="avgCity">-- km/L</div></div>
         <div><div class="metric-label">Promedio mixto</div><div class="metric-value" id="avgMix">-- km/L</div></div>
         <div><div class="metric-label">Promedio carretera</div><div class="metric-value" id="avgRoad">-- km/L</div></div>
+        <div><div class="metric-label">Promedio Aramco</div><div class="metric-value" id="avgAramco">-- km/L</div></div>
+        <div><div class="metric-label">Promedio Shell</div><div class="metric-value" id="avgShell">-- km/L</div></div>
+        <div><div class="metric-label">Promedio Copec</div><div class="metric-value" id="avgCopec">-- km/L</div></div>
       </div>
     </section>
 
@@ -301,6 +312,9 @@
         avgCity: $('avgCity'),
         avgMix: $('avgMix'),
         avgRoad: $('avgRoad'),
+        avgAramco: $('avgAramco'),
+        avgShell: $('avgShell'),
+        avgCopec: $('avgCopec'),
         alertsWrap: $('alertsWrap'),
         formSection: $('formSection'),
         historySection: $('historySection'),
@@ -317,6 +331,7 @@
         litros: $('litros'),
         monto: $('monto'),
         tipoUso: $('tipoUso'),
+        bencinera: $('bencinera'),
         observaciones: $('observaciones'),
       };
 
@@ -357,6 +372,10 @@
         } catch (err) {
           state.records = [];
         }
+        state.records = state.records.map((r) => ({
+          ...r,
+          bencinera: r.bencinera || 'Sin dato',
+        }));
         state.records = recalculate(state.records);
       }
 
@@ -436,6 +455,7 @@
         ui.fuelForm.reset();
         ui.fecha.value = todayISO();
         ui.tipoUso.value = 'Ciudad';
+        ui.bencinera.value = 'Aramco';
         showFormMessage('', 'info');
       }
 
@@ -447,6 +467,7 @@
         ui.litros.value = record.litros;
         ui.monto.value = record.monto;
         ui.tipoUso.value = record.tipoUso;
+        ui.bencinera.value = record.bencinera || 'Aramco';
         ui.observaciones.value = record.observaciones || '';
         showFormMessage('', 'info');
         openForm(true);
@@ -472,6 +493,13 @@
       function avgByUse(tipo) {
         const vals = state.records
           .filter((r) => r.tipoUso === tipo && r.rendimiento !== null)
+          .map((r) => Number(r.rendimiento));
+        return average(vals);
+      }
+
+      function avgByStation(station) {
+        const vals = state.records
+          .filter((r) => r.bencinera === station && r.rendimiento !== null)
           .map((r) => Number(r.rendimiento));
         return average(vals);
       }
@@ -504,6 +532,9 @@
         ui.avgCity.textContent = avgByUse('Ciudad') === null ? '-- km/L' : `${fmtNum(avgByUse('Ciudad'))} km/L`;
         ui.avgMix.textContent = avgByUse('Mixto') === null ? '-- km/L' : `${fmtNum(avgByUse('Mixto'))} km/L`;
         ui.avgRoad.textContent = avgByUse('Carretera') === null ? '-- km/L' : `${fmtNum(avgByUse('Carretera'))} km/L`;
+        ui.avgAramco.textContent = avgByStation('Aramco') === null ? '-- km/L' : `${fmtNum(avgByStation('Aramco'))} km/L`;
+        ui.avgShell.textContent = avgByStation('Shell') === null ? '-- km/L' : `${fmtNum(avgByStation('Shell'))} km/L`;
+        ui.avgCopec.textContent = avgByStation('Copec') === null ? '-- km/L' : `${fmtNum(avgByStation('Copec'))} km/L`;
       }
 
       function renderAlerts() {
@@ -525,6 +556,16 @@
         const city = avgByUse('Ciudad');
         const mix = avgByUse('Mixto');
         if (city !== null && mix !== null && city < mix) alerts.push('Tu promedio en ciudad es más bajo que tu promedio mixto.');
+
+        const stationStats = [
+          { name: 'Aramco', avg: avgByStation('Aramco') },
+          { name: 'Shell', avg: avgByStation('Shell') },
+          { name: 'Copec', avg: avgByStation('Copec') },
+        ].filter((s) => s.avg !== null);
+        if (stationStats.length >= 2) {
+          const bestStation = stationStats.reduce((acc, cur) => (cur.avg > acc.avg ? cur : acc), stationStats[0]);
+          alerts.push(`Según tus datos, ${bestStation.name} rinde mejor en promedio.`);
+        }
 
         if (!alerts.length) {
           ui.alertsWrap.className = 'small-note';
@@ -572,6 +613,7 @@
                 <div><span class="k">Kilometraje</span>${fmtNum(r.kilometraje, 0)} km</div>
                 <div><span class="k">Litros</span>${fmtNum(r.litros)} L</div>
                 <div><span class="k">Monto</span>${fmtMoney(r.monto)}</div>
+                <div><span class="k">Bencinera</span>${sanitizeText(r.bencinera || 'Sin dato')}</div>
                 <div><span class="k">Km recorridos</span>${r.kmRecorridos === null ? '—' : `${fmtNum(r.kmRecorridos, 0)} km`}</div>
                 <div><span class="k">Rendimiento</span>${r.rendimiento === null ? '—' : `${fmtNum(r.rendimiento)} km/L`}</div>
                 <div><span class="k">Costo por km</span>${r.costoPorKm === null ? '—' : `${fmtMoney(r.costoPorKm)}/km`}</div>
@@ -627,6 +669,7 @@
           litros: parseFloat(ui.litros.value),
           monto: parseInt(ui.monto.value, 10),
           tipoUso: ui.tipoUso.value,
+          bencinera: ui.bencinera.value,
           observaciones: (ui.observaciones.value || '').trim(),
         };
 
