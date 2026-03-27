@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Consumo de Bencina • Citroën C3</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #18212f;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --primary: #0f766e;
+      --primary-soft: #e6fffb;
+      --danger: #b91c1c;
+      --danger-soft: #fee2e2;
+      --shadow: 0 8px 24px rgba(17, 24, 39, 0.08);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .app {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 14px;
+      padding-bottom: 28px;
+    }
+
+    .title {
+      margin: 8px 0 14px;
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: 800;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: .8rem;
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: 1.15rem;
+      font-weight: 800;
+    }
+
+    .actions-main {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 13px;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-secondary { background: #eef2ff; color: #312e81; }
+    .btn-ghost { background: #f3f4f6; color: #111827; }
+    .btn-danger { background: var(--danger-soft); color: var(--danger); }
+
+    .hidden { display: none !important; }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+    }
+
+    .field { margin-bottom: 10px; }
+
+    label {
+      display: block;
+      font-size: .86rem;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 1rem;
+      color: var(--text);
+      background: #fff;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+
+    textarea { min-height: 72px; resize: vertical; }
+
+    .row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .msg {
+      margin-top: 10px;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: .92rem;
+      border: 1px solid transparent;
+    }
+
+    .msg.error { background: #fff1f2; color: #9f1239; border-color: #fecdd3; }
+    .msg.info { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+
+    .history-item {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .history-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .chip {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: .74rem;
+      background: #f3f4f6;
+      color: #374151;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .history-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 10px;
+      font-size: .9rem;
+    }
+
+    .k { display: block; font-size: .78rem; color: var(--muted); }
+
+    .item-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .empty {
+      border: 1px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .small-note { color: var(--muted); font-size: .82rem; margin-top: 6px; }
+
+    @media (min-width: 620px) {
+      .actions-main { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1 class="title">⛽ Consumo de Bencina • Citroën C3 AT</h1>
+
+    <section class="card">
+      <div class="grid">
+        <div><div class="metric-label">Promedio general</div><div class="metric-value" id="mAvg">-- km/L</div></div>
+        <div><div class="metric-label">Última carga</div><div class="metric-value" id="mLast">-- km/L</div></div>
+        <div><div class="metric-label">Gasto total del mes</div><div class="metric-value" id="mMonth">$0</div></div>
+        <div><div class="metric-label">Total de cargas</div><div class="metric-value" id="mCount">0</div></div>
+      </div>
+    </section>
+
+    <div class="actions-main">
+      <button class="btn-primary" id="btnToggleForm">Agregar carga</button>
+      <button class="btn-secondary" id="btnToggleHistory">Ver historial</button>
+    </div>
+
+    <section class="card hidden" id="formSection">
+      <h2 id="formTitle">Agregar carga</h2>
+      <form id="fuelForm" novalidate>
+        <div class="field">
+          <label for="fecha">Fecha</label>
+          <input type="date" id="fecha" required />
+        </div>
+        <div class="field">
+          <label for="kilometraje">Kilometraje actual (km)</label>
+          <input type="number" id="kilometraje" min="0" step="1" required placeholder="Ej: 45230" />
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label for="litros">Litros cargados</label>
+            <input type="number" id="litros" min="0" step="0.01" required placeholder="Ej: 28.50" />
+          </div>
+          <div class="field">
+            <label for="monto">Monto pagado</label>
+            <input type="number" id="monto" min="0" step="1" required placeholder="Ej: 25000" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="tipoUso">Tipo de uso</label>
+          <select id="tipoUso">
+            <option value="Ciudad">Ciudad</option>
+            <option value="Mixto">Mixto</option>
+            <option value="Carretera">Carretera</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="bencinera">Bencinera</label>
+          <select id="bencinera">
+            <option value="Aramco">Aramco</option>
+            <option value="Shell">Shell</option>
+            <option value="Copec">Copec</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="observaciones">Observaciones (opcional)</label>
+          <textarea id="observaciones" maxlength="140"></textarea>
+        </div>
+        <button type="submit" class="btn-primary" id="btnSave">Guardar carga</button>
+        <button type="button" class="btn-ghost" id="btnCancelForm" style="margin-top:8px;">Cancelar</button>
+      </form>
+      <div id="formMsg"></div>
+    </section>
+
+    <section class="card" id="extraSection">
+      <h2>Resumen extra</h2>
+      <div class="grid">
+        <div><div class="metric-label">Mejor rendimiento</div><div class="metric-value" id="best">-- km/L</div></div>
+        <div><div class="metric-label">Peor rendimiento</div><div class="metric-value" id="worst">-- km/L</div></div>
+        <div><div class="metric-label">Promedio ciudad</div><div class="metric-value" id="avgCity">-- km/L</div></div>
+        <div><div class="metric-label">Promedio mixto</div><div class="metric-value" id="avgMix">-- km/L</div></div>
+        <div><div class="metric-label">Promedio carretera</div><div class="metric-value" id="avgRoad">-- km/L</div></div>
+        <div><div class="metric-label">Promedio Aramco</div><div class="metric-value" id="avgAramco">-- km/L</div></div>
+        <div><div class="metric-label">Promedio Shell</div><div class="metric-value" id="avgShell">-- km/L</div></div>
+        <div><div class="metric-label">Promedio Copec</div><div class="metric-value" id="avgCopec">-- km/L</div></div>
+      </div>
+    </section>
+
+    <section class="card" id="alertsSection">
+      <h2>Alertas inteligentes</h2>
+      <div id="alertsWrap" class="small-note">Sin alertas por ahora.</div>
+    </section>
+
+    <section class="card hidden" id="historySection">
+      <h2>Historial de cargas</h2>
+      <div id="historyList"></div>
+    </section>
+
+    <button class="btn-danger" id="btnClearAll">Borrar todos los datos</button>
+  </main>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = 'c3_fuel_records_v2';
+
+      const state = {
+        records: [],
+        editingId: null,
+        formOpen: false,
+        historyOpen: false,
+      };
+
+      const $ = (id) => document.getElementById(id);
+
+      const ui = {
+        mAvg: $('mAvg'),
+        mLast: $('mLast'),
+        mMonth: $('mMonth'),
+        mCount: $('mCount'),
+        best: $('best'),
+        worst: $('worst'),
+        avgCity: $('avgCity'),
+        avgMix: $('avgMix'),
+        avgRoad: $('avgRoad'),
+        avgAramco: $('avgAramco'),
+        avgShell: $('avgShell'),
+        avgCopec: $('avgCopec'),
+        alertsWrap: $('alertsWrap'),
+        formSection: $('formSection'),
+        historySection: $('historySection'),
+        historyList: $('historyList'),
+        fuelForm: $('fuelForm'),
+        formTitle: $('formTitle'),
+        formMsg: $('formMsg'),
+        btnToggleForm: $('btnToggleForm'),
+        btnToggleHistory: $('btnToggleHistory'),
+        btnCancelForm: $('btnCancelForm'),
+        btnClearAll: $('btnClearAll'),
+        fecha: $('fecha'),
+        kilometraje: $('kilometraje'),
+        litros: $('litros'),
+        monto: $('monto'),
+        tipoUso: $('tipoUso'),
+        bencinera: $('bencinera'),
+        observaciones: $('observaciones'),
+      };
+
+      function todayISO() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
+
+      function fmtNum(n, dec = 2) {
+        if (n === null || n === undefined || Number.isNaN(n)) return '--';
+        return Number(n).toLocaleString('es-ES', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+      }
+
+      function fmtMoney(n) {
+        return Number(n || 0).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+      }
+
+      function parseDate(dateStr) {
+        return new Date(dateStr + 'T00:00:00');
+      }
+
+      function sortAsc(records) {
+        return [...records].sort((a, b) => {
+          const d = parseDate(a.fecha) - parseDate(b.fecha);
+          if (d !== 0) return d;
+          return Number(a.kilometraje) - Number(b.kilometraje);
+        });
+      }
+
+      function sanitizeText(v) {
+        return String(v || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      function load() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          state.records = raw ? JSON.parse(raw) : [];
+        } catch (err) {
+          state.records = [];
+        }
+        state.records = state.records.map((r) => ({
+          ...r,
+          bencinera: r.bencinera || 'Sin dato',
+        }));
+        state.records = recalculate(state.records);
+      }
+
+      function save() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.records));
+      }
+
+      function recalculate(records) {
+        const sorted = sortAsc(records).map((r) => ({ ...r }));
+        for (let i = 0; i < sorted.length; i++) {
+          const curr = sorted[i];
+          if (i === 0) {
+            curr.kmRecorridos = null;
+            curr.rendimiento = null;
+            curr.costoPorKm = null;
+            continue;
+          }
+          const prev = sorted[i - 1];
+          const km = Number(curr.kilometraje) - Number(prev.kilometraje);
+          if (km > 0 && Number(curr.litros) > 0) {
+            curr.kmRecorridos = km;
+            curr.rendimiento = km / Number(curr.litros);
+            curr.costoPorKm = Number(curr.monto) / km;
+          } else {
+            curr.kmRecorridos = null;
+            curr.rendimiento = null;
+            curr.costoPorKm = null;
+          }
+        }
+        return sorted;
+      }
+
+      function getPreviousRecord(fecha, kilometraje, excludeId) {
+        const targetDate = parseDate(fecha);
+        return state.records
+          .filter((r) => r.id !== excludeId)
+          .filter((r) => {
+            const d = parseDate(r.fecha);
+            if (d < targetDate) return true;
+            if (d.getTime() === targetDate.getTime() && Number(r.kilometraje) <= Number(kilometraje)) return true;
+            return false;
+          })
+          .sort((a, b) => {
+            const d = parseDate(b.fecha) - parseDate(a.fecha);
+            if (d !== 0) return d;
+            return Number(b.kilometraje) - Number(a.kilometraje);
+          })[0] || null;
+      }
+
+      function showFormMessage(text, type) {
+        if (!text) {
+          ui.formMsg.innerHTML = '';
+          return;
+        }
+        ui.formMsg.innerHTML = `<div class="msg ${type === 'info' ? 'info' : 'error'}">${sanitizeText(text)}</div>`;
+      }
+
+      function validate(payload, editingId) {
+        if (!payload.fecha || Number.isNaN(payload.kilometraje) || Number.isNaN(payload.litros) || Number.isNaN(payload.monto)) {
+          return 'Completá fecha, kilometraje, litros y monto.';
+        }
+        if (payload.litros <= 0 || payload.monto <= 0) {
+          return 'Litros y monto deben ser mayores a 0.';
+        }
+
+        const prev = getPreviousRecord(payload.fecha, payload.kilometraje, editingId);
+        if (prev && Number(payload.kilometraje) < Number(prev.kilometraje)) {
+          return `El kilometraje no puede ser menor al registro anterior (${prev.kilometraje}).`;
+        }
+
+        return null;
+      }
+
+      function resetForm() {
+        state.editingId = null;
+        ui.formTitle.textContent = 'Agregar carga';
+        ui.fuelForm.reset();
+        ui.fecha.value = todayISO();
+        ui.tipoUso.value = 'Ciudad';
+        ui.bencinera.value = 'Aramco';
+        showFormMessage('', 'info');
+      }
+
+      function fillForm(record) {
+        state.editingId = record.id;
+        ui.formTitle.textContent = 'Editar carga';
+        ui.fecha.value = record.fecha;
+        ui.kilometraje.value = record.kilometraje;
+        ui.litros.value = record.litros;
+        ui.monto.value = record.monto;
+        ui.tipoUso.value = record.tipoUso;
+        ui.bencinera.value = record.bencinera || 'Aramco';
+        ui.observaciones.value = record.observaciones || '';
+        showFormMessage('', 'info');
+        openForm(true);
+      }
+
+      function openForm(open) {
+        state.formOpen = open;
+        ui.formSection.classList.toggle('hidden', !open);
+        ui.btnToggleForm.textContent = open ? 'Cerrar formulario' : 'Agregar carga';
+      }
+
+      function openHistory(open) {
+        state.historyOpen = open;
+        ui.historySection.classList.toggle('hidden', !open);
+        ui.btnToggleHistory.textContent = open ? 'Ocultar historial' : 'Ver historial';
+      }
+
+      function average(arr) {
+        if (!arr.length) return null;
+        return arr.reduce((s, n) => s + n, 0) / arr.length;
+      }
+
+      function avgByUse(tipo) {
+        const vals = state.records
+          .filter((r) => r.tipoUso === tipo && r.rendimiento !== null)
+          .map((r) => Number(r.rendimiento));
+        return average(vals);
+      }
+
+      function avgByStation(station) {
+        const vals = state.records
+          .filter((r) => r.bencinera === station && r.rendimiento !== null)
+          .map((r) => Number(r.rendimiento));
+        return average(vals);
+      }
+
+      function renderDashboard() {
+        const valid = state.records.filter((r) => r.rendimiento !== null);
+        const avgGeneral = average(valid.map((r) => Number(r.rendimiento)));
+        const last = valid.length ? valid[valid.length - 1] : null;
+
+        const now = new Date();
+        const m = now.getMonth();
+        const y = now.getFullYear();
+        const monthTotal = state.records
+          .filter((r) => {
+            const d = parseDate(r.fecha);
+            return d.getMonth() === m && d.getFullYear() === y;
+          })
+          .reduce((sum, r) => sum + Number(r.monto), 0);
+
+        ui.mAvg.textContent = avgGeneral === null ? '-- km/L' : `${fmtNum(avgGeneral)} km/L`;
+        ui.mLast.textContent = last ? `${fmtNum(last.rendimiento)} km/L` : '-- km/L';
+        ui.mMonth.textContent = fmtMoney(monthTotal);
+        ui.mCount.textContent = String(state.records.length);
+
+        const best = valid.length ? Math.max(...valid.map((r) => Number(r.rendimiento))) : null;
+        const worst = valid.length ? Math.min(...valid.map((r) => Number(r.rendimiento))) : null;
+
+        ui.best.textContent = best === null ? '-- km/L' : `${fmtNum(best)} km/L`;
+        ui.worst.textContent = worst === null ? '-- km/L' : `${fmtNum(worst)} km/L`;
+        ui.avgCity.textContent = avgByUse('Ciudad') === null ? '-- km/L' : `${fmtNum(avgByUse('Ciudad'))} km/L`;
+        ui.avgMix.textContent = avgByUse('Mixto') === null ? '-- km/L' : `${fmtNum(avgByUse('Mixto'))} km/L`;
+        ui.avgRoad.textContent = avgByUse('Carretera') === null ? '-- km/L' : `${fmtNum(avgByUse('Carretera'))} km/L`;
+        ui.avgAramco.textContent = avgByStation('Aramco') === null ? '-- km/L' : `${fmtNum(avgByStation('Aramco'))} km/L`;
+        ui.avgShell.textContent = avgByStation('Shell') === null ? '-- km/L' : `${fmtNum(avgByStation('Shell'))} km/L`;
+        ui.avgCopec.textContent = avgByStation('Copec') === null ? '-- km/L' : `${fmtNum(avgByStation('Copec'))} km/L`;
+      }
+
+      function renderAlerts() {
+        const valid = state.records.filter((r) => r.rendimiento !== null);
+        const alerts = [];
+
+        if (valid.length >= 2) {
+          const a = valid[valid.length - 1];
+          const b = valid[valid.length - 2];
+          if (a.rendimiento < b.rendimiento) alerts.push('Tu rendimiento bajó respecto a la carga anterior.');
+        }
+
+        if (valid.length > 0) {
+          const latest = valid[valid.length - 1];
+          const best = valid.reduce((acc, cur) => (cur.rendimiento > acc.rendimiento ? cur : acc), valid[0]);
+          if (latest.id === best.id) alerts.push('Esta fue tu mejor carga hasta ahora.');
+        }
+
+        const city = avgByUse('Ciudad');
+        const mix = avgByUse('Mixto');
+        if (city !== null && mix !== null && city < mix) alerts.push('Tu promedio en ciudad es más bajo que tu promedio mixto.');
+
+        const stationStats = [
+          { name: 'Aramco', avg: avgByStation('Aramco') },
+          { name: 'Shell', avg: avgByStation('Shell') },
+          { name: 'Copec', avg: avgByStation('Copec') },
+        ].filter((s) => s.avg !== null);
+        if (stationStats.length >= 2) {
+          const bestStation = stationStats.reduce((acc, cur) => (cur.avg > acc.avg ? cur : acc), stationStats[0]);
+          alerts.push(`Según tus datos, ${bestStation.name} rinde mejor en promedio.`);
+        }
+
+        if (!alerts.length) {
+          ui.alertsWrap.className = 'small-note';
+          ui.alertsWrap.textContent = 'Sin alertas por ahora.';
+          return;
+        }
+
+        ui.alertsWrap.className = '';
+        ui.alertsWrap.innerHTML = alerts.map((msg) => `<div class="msg info">${sanitizeText(msg)}</div>`).join('');
+      }
+
+      function renderHistory() {
+        const list = [...state.records].sort((a, b) => parseDate(b.fecha) - parseDate(a.fecha) || Number(b.kilometraje) - Number(a.kilometraje));
+
+        if (!list.length) {
+          ui.historyList.innerHTML = '<div class="empty">No hay cargas registradas todavía.</div>';
+          return;
+        }
+
+        const asc = sortAsc(state.records);
+
+        ui.historyList.innerHTML = list.map((r) => {
+          const idx = asc.findIndex((x) => x.id === r.id);
+          const prev = idx > 0 ? asc[idx - 1] : null;
+          let comp = 'Primera carga registrada.';
+
+          if (prev && r.rendimiento !== null && prev.rendimiento !== null) {
+            const delta = r.rendimiento - prev.rendimiento;
+            comp = `Vs anterior: ${delta >= 0 ? '+' : ''}${fmtNum(delta)} km/L`;
+          } else if (prev && r.kmRecorridos !== null) {
+            comp = `Vs anterior: ${fmtNum(r.kmRecorridos, 0)} km recorridos`;
+          }
+
+          return `
+            <article class="history-item">
+              <div class="history-head">
+                <div>
+                  <div><strong>${sanitizeText(r.fecha.split('-').reverse().join('/'))}</strong></div>
+                  <span class="chip">${sanitizeText(r.tipoUso)}</span>
+                </div>
+                <div><strong>${fmtMoney(r.monto)}</strong></div>
+              </div>
+
+              <div class="history-grid">
+                <div><span class="k">Kilometraje</span>${fmtNum(r.kilometraje, 0)} km</div>
+                <div><span class="k">Litros</span>${fmtNum(r.litros)} L</div>
+                <div><span class="k">Monto</span>${fmtMoney(r.monto)}</div>
+                <div><span class="k">Bencinera</span>${sanitizeText(r.bencinera || 'Sin dato')}</div>
+                <div><span class="k">Km recorridos</span>${r.kmRecorridos === null ? '—' : `${fmtNum(r.kmRecorridos, 0)} km`}</div>
+                <div><span class="k">Rendimiento</span>${r.rendimiento === null ? '—' : `${fmtNum(r.rendimiento)} km/L`}</div>
+                <div><span class="k">Costo por km</span>${r.costoPorKm === null ? '—' : `${fmtMoney(r.costoPorKm)}/km`}</div>
+                <div><span class="k">Observaciones</span>${r.observaciones ? sanitizeText(r.observaciones) : '—'}</div>
+                <div><span class="k">Comparación</span>${sanitizeText(comp)}</div>
+              </div>
+
+              <div class="item-actions">
+                <button class="btn-secondary" data-action="edit" data-id="${r.id}">Editar</button>
+                <button class="btn-danger" data-action="delete" data-id="${r.id}">Eliminar</button>
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      function refresh() {
+        renderDashboard();
+        renderAlerts();
+        renderHistory();
+      }
+
+      function upsert(payload) {
+        if (state.editingId) {
+          state.records = state.records.map((r) => (r.id === state.editingId ? { ...r, ...payload, id: r.id } : r));
+        } else {
+          state.records.push({
+            ...payload,
+            id: String(Date.now()) + Math.random().toString(16).slice(2),
+          });
+        }
+
+        state.records = recalculate(state.records);
+        save();
+        refresh();
+      }
+
+      function deleteRecord(id) {
+        const ok = confirm('¿Eliminar esta carga? Se recalcularán las siguientes.');
+        if (!ok) return;
+        state.records = state.records.filter((r) => r.id !== id);
+        state.records = recalculate(state.records);
+        save();
+        refresh();
+      }
+
+      function onSubmit(e) {
+        e.preventDefault();
+
+        const payload = {
+          fecha: ui.fecha.value,
+          kilometraje: parseInt(ui.kilometraje.value, 10),
+          litros: parseFloat(ui.litros.value),
+          monto: parseInt(ui.monto.value, 10),
+          tipoUso: ui.tipoUso.value,
+          bencinera: ui.bencinera.value,
+          observaciones: (ui.observaciones.value || '').trim(),
+        };
+
+        const error = validate(payload, state.editingId);
+        if (error) {
+          showFormMessage(error, 'error');
+          return;
+        }
+
+        upsert(payload);
+        showFormMessage('Carga guardada correctamente.', 'info');
+        resetForm();
+        openForm(false);
+      }
+
+      function bindEvents() {
+        ui.btnToggleForm.addEventListener('click', function () {
+          openForm(!state.formOpen);
+        });
+
+        ui.btnToggleHistory.addEventListener('click', function () {
+          openHistory(!state.historyOpen);
+        });
+
+        ui.btnCancelForm.addEventListener('click', function () {
+          resetForm();
+          openForm(false);
+        });
+
+        ui.btnClearAll.addEventListener('click', function () {
+          const ok = confirm('¿Seguro que querés borrar todos los datos? Esta acción no se puede deshacer.');
+          if (!ok) return;
+          state.records = [];
+          save();
+          refresh();
+          resetForm();
+          openForm(false);
+          openHistory(false);
+        });
+
+        ui.fuelForm.addEventListener('submit', onSubmit);
+
+        ui.historyList.addEventListener('click', function (e) {
+          const btn = e.target.closest('button[data-action]');
+          if (!btn) return;
+          const action = btn.getAttribute('data-action');
+          const id = btn.getAttribute('data-id');
+          if (!id) return;
+
+          if (action === 'edit') {
+            const rec = state.records.find((r) => r.id === id);
+            if (!rec) return;
+            fillForm(rec);
+          }
+
+          if (action === 'delete') {
+            deleteRecord(id);
+          }
+        });
+      }
+
+      function init() {
+        load();
+        bindEvents();
+        resetForm();
+        openForm(false);
+        openHistory(false);
+        refresh();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
